@@ -35,7 +35,7 @@ public class MeteoController {
 
 	@FXML
 	void doCalcolaSequenza(ActionEvent event) {
-
+		txtResult.clear();
 		int mese= Integer.parseInt(boxMese.getValue());
 		List<Citta> best = model.trovaSequenza(mese);
 		for(Citta c: best) {

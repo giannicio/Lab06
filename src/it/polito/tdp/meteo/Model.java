@@ -33,45 +33,50 @@ public class Model {
 
 	public List<Citta> trovaSequenza(int mese) {
 
-		for(String c : meteoD.localita())
+		for(String c : meteoD.localita()) {
 			listaC.add(new Citta(c,meteoD.getAllRilevamentiLocalitaMese(mese, c)));
-		bestSeq = null;
+		}
 		costoB=Double.MAX_VALUE;
-		
 		cercaSeq(parziale,0);
-		
 		return bestSeq;
 	}
 
 	private void cercaSeq(List<Citta> parziale, int L) {
-		
-		if(L==15) {
-			if(controlloPresenza(parziale)) {
-			double costo = this.punteggioSoluzione(parziale);
-			if(costo<costoB) {
-				bestSeq= parziale;
-				costoB=costo;
-				System.out.println("Scarto"+bestSeq);
-				return;
-				}
-			}
-		}
-		
-		if(this.controllaParziale(parziale)) {
+		if(parziale.size() > 15) {
 			return;
 		}
 		
+		if(this.parzialeSbagliato(parziale)) {
+			return;
+		}
+		
+		if(L==15) {
+			if(controlloPresenza(parziale)) {
+				double costo = this.punteggioSoluzione(parziale);
+					if(costo < costoB) {
+						bestSeq = new ArrayList<Citta>(parziale);
+						costoB = costo;
+						System.out.println(bestSeq +" "+ costoB);
+						return;
+					}
+			}
+		}
+		
+		
 		for(Citta c: listaC) {
+			
 			parziale.add(c);
 			cercaSeq(parziale,L+1);
-			parziale.remove(c);
+			parziale.remove(parziale.size()-1);
 		}
 		
 	}
 
 	private boolean controlloPresenza(List<Citta> parziale) {
 		boolean result = true;
+		int cityCounter = 0;
 		for(Citta c : listaC) {
+			c.setCounter(cityCounter);
 			for(Citta ct : parziale) {
 				if(ct.getNome().equals(c.getNome()))
 					c.increaseCounter();
@@ -90,7 +95,7 @@ public class Model {
 
 		double score = 0.0;
 		
-		for(int i = 0; i<soluzioneCandidata.size();i++) {
+		for(int i = 0; i<soluzioneCandidata.size(); i++) {
 			score += soluzioneCandidata.get(i).getRilevamenti().get(i).getUmidita();
 			if(i<14 && !(soluzioneCandidata.get(i).equals(soluzioneCandidata.get(i+1)))) {
 				score +=100;
@@ -99,9 +104,15 @@ public class Model {
 		return score;
 	}
 
-	private boolean controllaParziale(List<Citta> parziale) {
-		boolean result = true; // di default è true quindi entra e fa return, cioè scarta la soluzione
+	private boolean parzialeSbagliato(List<Citta> parziale) {
+		// ritorno true --> soluzione ERRATA
+		// ritorno false --> soluzione OK
+		boolean result = true;
+		// di default è true quindi entra e fa return, cioè scarta la soluzione
+		// il boolean diventera false se la soluzione è buona
+		int cityCounter = 0;
 		for(Citta c : listaC) {
+			c.setCounter(cityCounter);
 			for(Citta ct : parziale) {
 				if(ct.getNome().equals(c.getNome()))
 					c.increaseCounter();
@@ -110,20 +121,28 @@ public class Model {
 		
 		for(Citta c : listaC) {
 			if(c.getCounter()>6)
-				return result;
+				return result; // result = true soluzione non buona 
 		}
-		
-	/*	for(int i =0; i<parziale.size();i++) {
-			if(parziale.size()-1==0)
+		// CASO GIORNO 1
+			if(parziale.size() == 1) // se è la prima citta del primo giorno, esci dal controllo
 				return false;
-			if(i>0 && (parziale.size()==0||parziale.size()==1)) {
-				return !(parziale.get(i).equals(parziale.get(i-1)));
+		// CASO GIORNO 2
+			if(parziale.size() == 2) { // se sono al secondo giorno allora la seconda citta è uguale alla prima
+				return !(parziale.get(parziale.size()-1).equals(parziale.get(parziale.size()-2)));
 			}
-				
-			if(i>=2 && i<(parziale.size()-1) && (!parziale.get(i).equals(parziale.get(i+1)) && !(parziale.get(i).equals(parziale.get(i-1)) && parziale.get(i-1).equals(parziale.get(i-2))))){
-				return result;
+		// CASO GIORNO 3
+			if(parziale.size() == 3) {
+				return !(parziale.get(parziale.size()-1).equals(parziale.get(parziale.size()-2)) && parziale.get(parziale.size()-2).equals(parziale.get(parziale.size()-3)));
 			}
-		}*/
+		// CASO GIORNO > 3	
+			if(parziale.size()>3 && parziale.size()<16){
+				if(!parziale.get(parziale.size()-2).equals(parziale.get(parziale.size()-1))) { // se due successivi sono diversi
+					return !(parziale.get(parziale.size()-2).equals(parziale.get(parziale.size()-3)) && parziale.get(parziale.size()-3).equals(parziale.get(parziale.size()-4))); 
+		
+					
+				}
+			}
+
 			
 		result = false;
 		return result;
